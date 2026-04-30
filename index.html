@@ -1,0 +1,451 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>RiskSense | Predictive Health Dashboard</title>
+
+  <link rel="stylesheet" href="https://unpkg.com/dc@4/dist/style/dc.min.css" />
+  <script src="https://unpkg.com/d3@7/dist/d3.min.js"></script>
+  <script src="https://unpkg.com/crossfilter2@1.5.4/crossfilter.min.js"></script>
+  <script src="https://unpkg.com/dc@4/dist/dc.min.js"></script>
+
+  <style>
+    :root {
+      --bg: #f4f7fb;
+      --surface: #ffffff;
+      --surface-2: #f8fafc;
+      --text: #111827;
+      --muted: #64748b;
+      --line: #e5eaf2;
+      --blue: #2563eb;
+      --blue-soft: #dbeafe;
+      --red-soft: #fee2e2;
+      --orange-soft: #fef3c7;
+      --green-soft: #dcfce7;
+      --shadow: 0 18px 45px rgba(15, 23, 42, 0.08);
+      --radius: 22px;
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      background: linear-gradient(135deg, #dbeafe 0%, #c7d2fe 35%, #e0f2fe 100%);
+      color: var(--text);
+    }
+
+    .app {
+      display: grid;
+      grid-template-columns: 280px minmax(0, 1fr) 340px;
+      gap: 22px;
+      min-height: 100vh;
+      padding: 24px;
+    }
+
+    .panel {
+      background: rgba(255, 255, 255, 0.88);
+      border: 1px solid rgba(226, 232, 240, 0.9);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      backdrop-filter: blur(10px);
+    }
+
+    .sidebar {
+      background: linear-gradient(180deg, rgba(255,255,255,0.92), rgba(239,246,255,0.9));
+      padding: 22px;
+      display: flex;
+      flex-direction: column;
+      gap: 18px;
+    }
+
+    .logo-row { display: flex; align-items: center; gap: 12px; }
+
+    .logo-mark {
+      width: 44px; height: 44px; border-radius: 16px;
+      background: linear-gradient(135deg, #2563eb, #06b6d4);
+      display: grid; place-items: center; color: white; font-weight: 900;
+      box-shadow: 0 12px 24px rgba(37, 99, 235, 0.24);
+    }
+
+    .brand h1 { margin: 0; font-size: 24px; letter-spacing: -0.04em; }
+    .brand p { margin: 4px 0 0; font-size: 12px; color: var(--muted); }
+
+    .menu { display: grid; gap: 9px; margin-top: 8px; }
+
+    .menu-item {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 12px 14px; border-radius: 14px; color: #334155;
+      font-weight: 700; font-size: 14px; text-decoration: none;
+      transition: 0.18s ease;
+    }
+
+    .menu-item:hover { background: #edf4ff; color: #1746a2; transform: translateX(2px); }
+    .menu-item.active { color: #1746a2; background: var(--blue-soft); }
+
+    .filter-box {
+      padding: 15px; border-radius: 18px; background: var(--surface-2); border: 1px solid var(--line);
+    }
+
+    .filter-box h3 {
+      margin: 0 0 10px; font-size: 13px; color: #334155;
+      text-transform: uppercase; letter-spacing: 0.04em;
+    }
+
+    .dc-select-menu {
+      width: 100%; padding: 10px 12px; border: 1px solid #dbe4f0;
+      border-radius: 12px; background: white; color: #334155; font-size: 14px; outline: none;
+    }
+
+    .prototype-note {
+      margin-top: auto; padding: 15px; border-radius: 18px; background: #eff6ff;
+      border: 1px solid #bfdbfe; color: #1e3a8a; font-size: 12px; line-height: 1.5;
+    }
+
+    .reset-link { color: var(--blue); text-decoration: none; font-size: 13px; font-weight: 800; padding-left: 4px; }
+
+    .main { display: grid; gap: 22px; min-width: 0; }
+
+    .hero {
+      background: linear-gradient(135deg, rgba(59,130,246,0.14), rgba(14,165,233,0.10));
+      background: linear-gradient(135deg, rgba(37,99,235,0.08), rgba(6,182,212,0.06));
+      padding: 24px; display: grid; grid-template-columns: 1fr auto; align-items: center; gap: 20px;
+      overflow: hidden; position: relative;
+    }
+
+    .eyebrow {
+      display: inline-flex; width: fit-content; align-items: center; gap: 8px;
+      padding: 7px 11px; border-radius: 999px; background: #eff6ff; color: #1d4ed8;
+      font-size: 12px; font-weight: 800; margin-bottom: 10px;
+    }
+
+    .hero h2 { margin: 0; font-size: clamp(28px, 3vw, 42px); line-height: 1.03; letter-spacing: -0.055em; }
+    .hero p { margin: 10px 0 0; max-width: 720px; color: var(--muted); font-size: 15px; line-height: 1.6; }
+
+    .time-pill {
+      padding: 13px 16px; border-radius: 999px; background: #0f172a; color: white;
+      font-size: 13px; font-weight: 800; box-shadow: 0 12px 24px rgba(15, 23, 42, 0.18);
+    }
+
+    .stats { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 16px; }
+    .stat-card { padding: 18px; position: relative; overflow: hidden; background: linear-gradient(135deg, rgba(255,255,255,0.96), rgba(219,234,254,0.85)); }
+    .stat-card .label { color: var(--muted); font-size: 12px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.04em; margin-bottom: 12px; }
+    .stat-card .value { font-size: 34px; line-height: 1; font-weight: 900; letter-spacing: -0.055em; margin-bottom: 8px; }
+    .stat-card .sub { color: var(--muted); font-size: 13px; }
+
+    .grid-charts { display: grid; grid-template-columns: 1.1fr 0.9fr; gap: 22px; min-width: 0; }
+    .chart-card, .table-card, .report-card-main { padding: 20px; min-height: 360px; overflow: hidden; background: linear-gradient(180deg, rgba(255,255,255,0.94), rgba(239,246,255,0.92)); }
+    .chart-card h3, .table-card h3, .side-right h3, .report-card-main h3 { margin: 0; font-size: 18px; letter-spacing: -0.03em; }
+    .chart-card p, .table-card p, .side-right p, .report-card-main p { margin: 6px 0 16px; color: var(--muted); font-size: 13px; line-height: 1.5; }
+
+    table { width: 100%; border-collapse: collapse; font-size: 13px; border-radius: 16px; overflow: hidden; }
+    th { text-align: left; padding: 12px; color: #475569; background: #f8fafc; font-size: 12px; text-transform: uppercase; letter-spacing: 0.04em; border-bottom: 1px solid var(--line); }
+    td { padding: 12px; border-bottom: 1px solid var(--line); color: #334155; vertical-align: middle; }
+
+    .badge { display: inline-flex; align-items: center; padding: 6px 9px; border-radius: 999px; font-size: 12px; font-weight: 800; }
+    .badge.high { background: var(--red-soft); color: #b91c1c; }
+    .badge.medium { background: var(--orange-soft); color: #92400e; }
+    .badge.low { background: var(--green-soft); color: #166534; }
+
+    .side-right { padding: 20px; display: grid; gap: 18px; align-content: start; }
+    .alert-card { padding: 16px; border-radius: 18px; border: 1px solid #fecaca; background: linear-gradient(135deg, #fff1f2, #ffffff); }
+    .alert-card.medium { border-color: #fde68a; background: linear-gradient(135deg, #fef3c7, #ffffff); }
+    .alert-card.low { border-color: #bbf7d0; background: linear-gradient(135deg, #dcfce7, #ffffff); }
+    .alert-top { display: flex; justify-content: space-between; gap: 10px; align-items: flex-start; margin-bottom: 10px; }
+    .alert-card h4 { margin: 0; font-size: 15px; letter-spacing: -0.02em; }
+    .confidence-chip { white-space: nowrap; font-weight: 900; font-size: 12px; color: #0f172a; background: white; border: 1px solid var(--line); border-radius: 999px; padding: 6px 9px; }
+    .meta { color: var(--muted); font-size: 12px; line-height: 1.6; margin-bottom: 10px; }
+    .action { color: #334155; font-size: 13px; font-weight: 700; line-height: 1.45; }
+
+    .logic-box, .report-box { padding: 16px; border-radius: 18px; background: linear-gradient(135deg, rgba(224,242,254,0.95), rgba(238,244,255,0.95)); border: 1px solid var(--line); }
+    .logic-box ul, .report-box ul { margin: 10px 0 0; padding-left: 18px; color: #475569; line-height: 1.7; font-size: 13px; }
+    .formula { padding: 12px; border-radius: 14px; background: linear-gradient(135deg, #1e3a8a, #0f172a); color: white; font-size: 12px; line-height: 1.5; margin-top: 12px; font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace; }
+
+    .page { display: none; }
+    .page.active { display: grid; gap: 22px; }
+
+    .dc-chart .axis text, .dc-chart text { font-size: 12px; fill: #475569; }
+    .dc-chart .axis path, .dc-chart .axis line { stroke: #cbd5e1; }
+    .dc-chart .grid-line line { stroke: #eef2f7; }
+    .dc-chart rect.bar, .dc-chart circle.dot { fill: #2563eb; }
+    .dc-chart .selected rect.bar, .dc-chart .selected circle.dot { fill: #7c3aed; }
+    .dc-chart .deselected rect.bar, .dc-chart .deselected circle.dot { fill: #93c5fd; }
+
+    @media (max-width: 1260px) {
+      .app { grid-template-columns: 1fr; }
+      .stats { grid-template-columns: repeat(2, 1fr); }
+      .grid-charts { grid-template-columns: 1fr; }
+    }
+
+    @media (max-width: 720px) {
+      .app { padding: 14px; }
+      .stats { grid-template-columns: 1fr; }
+      .hero { grid-template-columns: 1fr; }
+      .time-pill { width: fit-content; }
+    }
+  </style>
+</head>
+<body>
+  <div class="app">
+    <aside class="panel sidebar">
+      <div class="logo-row">
+        <div class="logo-mark">RS</div>
+        <div class="brand">
+          <h1>RiskSense</h1>
+          <p>Early health monitoring</p>
+        </div>
+      </div>
+
+      <nav class="menu">
+        <a href="#dashboard" class="menu-item active" data-page="dashboard">Dashboard <span>●</span></a>
+        <a href="#alerts" class="menu-item" data-page="alerts">Live Alerts</a>
+        <a href="#regions" class="menu-item" data-page="regions">Regions</a>
+        <a href="#analytics" class="menu-item" data-page="analytics">Analytics</a>
+        <a href="#reports" class="menu-item" data-page="reports">Reports</a>
+      </nav>
+
+      <div class="filter-box">
+        <h3>Region</h3>
+        <div id="region-select"></div>
+      </div>
+
+      <div class="filter-box">
+        <h3>Risk Level</h3>
+        <div id="risk-select"></div>
+      </div>
+
+      <div class="filter-box">
+        <h3>Tourist Density</h3>
+        <div id="tourist-select"></div>
+      </div>
+
+      <div class="filter-box">
+        <h3>Heat Stress</h3>
+        <div id="heat-select"></div>
+      </div>
+
+      <a href="javascript:dc.filterAll();dc.renderAll();updateDashboard();" class="reset-link">Reset filters</a>
+
+      <div class="prototype-note">
+        <strong>Prototype note:</strong><br />
+        Built with simulated IoT-inspired environmental inputs and regional operational indicators.
+      </div>
+    </aside>
+
+    <main class="main">
+      <section id="page-dashboard" class="page active">
+        <section class="panel hero">
+          <div>
+            <div class="eyebrow">Predictive Health Intelligence · Crete</div>
+            <h2>Regional Health Forecast Dashboard</h2>
+            <p>RiskSense transforms temperature, humidity, tourist density, and historical incident patterns into early operational health alerts.</p>
+          </div>
+          <div class="time-pill">Forecast Window: Next 24h</div>
+        </section>
+
+        <section class="stats">
+          <div class="panel stat-card"><div class="label">High Risk Records</div><div class="value" id="high-risk-count">0</div><div class="sub">Filtered observations</div></div>
+          <div class="panel stat-card"><div class="label">Average Confidence</div><div class="value" id="avg-confidence">0%</div><div class="sub">Model output confidence</div></div>
+          <div class="panel stat-card"><div class="label">Average Temperature</div><div class="value" id="avg-temp">0°C</div><div class="sub">IoT-inspired input</div></div>
+          <div class="panel stat-card"><div class="label">Peak Region</div><div class="value" id="peak-region" style="font-size:24px;line-height:1.12;">—</div><div class="sub">Highest confidence signal</div></div>
+        </section>
+
+        <section class="grid-charts">
+          <div class="panel chart-card"><h3>Average Confidence by Region</h3><p>Regional confidence scores based on simulated environmental and operational indicators.</p><div id="confidence-chart"></div></div>
+          <div class="panel chart-card"><h3>Temperature vs Confidence</h3><p>Shows how heat conditions relate to confidence-based health risk alerts.</p><div id="scatter-chart"></div></div>
+        </section>
+
+        <section class="panel table-card"><h3>Filtered Regional Signals</h3><p>Current observations after filters are applied.</p><div style="overflow-x:auto;"><table><thead><tr><th>Region</th><th>Risk</th><th>Temp</th><th>Humidity</th><th>Tourism</th><th>Confidence</th><th>Suggested Action</th></tr></thead><tbody id="data-table"></tbody></table></div></section>
+      </section>
+
+      <section id="page-alerts" class="page">
+        <section class="panel hero"><div><div class="eyebrow">Operational View</div><h2>Live Operational Alerts</h2><p>Priority alerts generated from the current filtered selection.</p></div><div class="time-pill">Live View</div></section>
+        <section class="panel table-card"><h3>Alert Queue</h3><p>Top regional signals ordered by confidence score.</p><div id="alerts-page-container"></div></section>
+      </section>
+
+      <section id="page-regions" class="page">
+        <section class="panel hero"><div><div class="eyebrow">Regional View</div><h2>Regions</h2><p>Detailed table of regional environmental inputs, risk levels, confidence scores, and suggested actions.</p></div></section>
+        <section class="panel table-card"><h3>Regional Signals</h3><p>Filtered data table.</p><div style="overflow-x:auto;"><table><thead><tr><th>Region</th><th>Risk</th><th>Temp</th><th>Humidity</th><th>Heat Stress</th><th>Tourism</th><th>Incidents</th><th>Confidence</th><th>Suggested Action</th></tr></thead><tbody id="regions-table"></tbody></table></div></section>
+      </section>
+
+      <section id="page-analytics" class="page">
+        <section class="panel hero"><div><div class="eyebrow">Analytics View</div><h2>Predictive Analytics</h2><p>Charts showing confidence distribution and the relationship between environmental heat signals and risk confidence.</p></div></section>
+        <section class="grid-charts">
+          <div class="panel chart-card"><h3>Average Confidence by Region</h3><p>Interactive dc.js chart.</p><div id="confidence-chart-2"></div></div>
+          <div class="panel chart-card"><h3>Temperature vs Confidence</h3><p>Interactive scatter plot.</p><div id="scatter-chart-2"></div></div>
+        </section>
+      </section>
+
+      <section id="page-reports" class="page">
+        <section class="panel hero"><div><div class="eyebrow">Report View</div><h2>Prototype Report</h2><p>Summary of the RiskSense dashboard output for hackathon presentation.</p></div></section>
+        <section class="panel report-card-main">
+          <h3>RiskSense Summary Report</h3>
+          <p>This report summarizes current findings from simulated IoT-inspired environmental inputs and regional operational indicators.</p>
+          <div class="report-box">
+            <ul>
+              <li><strong>Primary risk signal:</strong> heat-related pressure in high-tourism areas.</li>
+              <li><strong>Top region:</strong> Heraklion based on confidence scoring.</li>
+              <li><strong>Recommended response:</strong> increase emergency readiness and monitor vulnerable groups.</li>
+              <li><strong>Data note:</strong> simulated prototype data for demonstration purposes.</li>
+            </ul>
+          </div>
+        </section>
+      </section>
+    </main>
+
+    <aside class="panel side-right">
+      <div><h3>Live Operational Alerts</h3><p>Top alerts from the current filtered selection.</p></div>
+      <div id="alerts-container"></div>
+      <div class="logic-box">
+        <h3>Confidence Logic</h3>
+        <p>Prototype scores are generated through weighted rule-based aggregation.</p>
+        <ul><li>Temperature score</li><li>Tourist density score</li><li>Historical incident score</li></ul>
+        <div class="formula">Confidence = Temperature Score + Tourist Density Score + Historical Incident Score</div>
+      </div>
+    </aside>
+  </div>
+
+  <script>
+    const rawData = [
+      { Region: 'Heraklion', Temperature: 36, Humidity: 68, HeatStressIndex: 'High', TouristDensity: 'High', HistoricalIncidents: 24, RiskLevel: 'High', ConfidenceScore: 87, SuggestedAction: 'Increase emergency readiness' },
+      { Region: 'Heraklion', Temperature: 35, Humidity: 66, HeatStressIndex: 'High', TouristDensity: 'High', HistoricalIncidents: 21, RiskLevel: 'High', ConfidenceScore: 84, SuggestedAction: 'Monitor emergency visits' },
+      { Region: 'Heraklion', Temperature: 34, Humidity: 63, HeatStressIndex: 'Medium', TouristDensity: 'Medium', HistoricalIncidents: 18, RiskLevel: 'Medium', ConfidenceScore: 76, SuggestedAction: 'Prepare hydration alerts' },
+      { Region: 'Chania', Temperature: 34, Humidity: 61, HeatStressIndex: 'High', TouristDensity: 'High', HistoricalIncidents: 19, RiskLevel: 'High', ConfidenceScore: 81, SuggestedAction: 'Reinforce local units' },
+      { Region: 'Chania', Temperature: 33, Humidity: 59, HeatStressIndex: 'Medium', TouristDensity: 'High', HistoricalIncidents: 17, RiskLevel: 'High', ConfidenceScore: 78, SuggestedAction: 'Monitor tourist pressure' },
+      { Region: 'Chania', Temperature: 31, Humidity: 56, HeatStressIndex: 'Medium', TouristDensity: 'Medium', HistoricalIncidents: 15, RiskLevel: 'Medium', ConfidenceScore: 69, SuggestedAction: 'Maintain alert readiness' },
+      { Region: 'Rethymno', Temperature: 32, Humidity: 57, HeatStressIndex: 'Medium', TouristDensity: 'Medium', HistoricalIncidents: 14, RiskLevel: 'Medium', ConfidenceScore: 68, SuggestedAction: 'Monitor heat-related incidents' },
+      { Region: 'Rethymno', Temperature: 31, Humidity: 55, HeatStressIndex: 'Medium', TouristDensity: 'Medium', HistoricalIncidents: 12, RiskLevel: 'Medium', ConfidenceScore: 64, SuggestedAction: 'Hydration monitoring' },
+      { Region: 'Rethymno', Temperature: 30, Humidity: 52, HeatStressIndex: 'Low', TouristDensity: 'Low', HistoricalIncidents: 10, RiskLevel: 'Low', ConfidenceScore: 52, SuggestedAction: 'Standard observation' },
+      { Region: 'Agios Nikolaos', Temperature: 29, Humidity: 49, HeatStressIndex: 'Low', TouristDensity: 'Low', HistoricalIncidents: 8, RiskLevel: 'Low', ConfidenceScore: 43, SuggestedAction: 'Standard monitoring' },
+      { Region: 'Agios Nikolaos', Temperature: 30, Humidity: 51, HeatStressIndex: 'Low', TouristDensity: 'Low', HistoricalIncidents: 9, RiskLevel: 'Low', ConfidenceScore: 46, SuggestedAction: 'Maintain current staffing' },
+      { Region: 'Agios Nikolaos', Temperature: 31, Humidity: 54, HeatStressIndex: 'Medium', TouristDensity: 'Medium', HistoricalIncidents: 11, RiskLevel: 'Medium', ConfidenceScore: 58, SuggestedAction: 'Prepare response capacity' },
+      { Region: 'Ierapetra', Temperature: 35, Humidity: 60, HeatStressIndex: 'High', TouristDensity: 'Medium', HistoricalIncidents: 16, RiskLevel: 'High', ConfidenceScore: 77, SuggestedAction: 'Prepare heat response team' },
+      { Region: 'Ierapetra', Temperature: 33, Humidity: 58, HeatStressIndex: 'Medium', TouristDensity: 'Medium', HistoricalIncidents: 13, RiskLevel: 'Medium', ConfidenceScore: 66, SuggestedAction: 'Monitor vulnerable groups' },
+      { Region: 'Malia', Temperature: 34, Humidity: 65, HeatStressIndex: 'High', TouristDensity: 'High', HistoricalIncidents: 20, RiskLevel: 'High', ConfidenceScore: 83, SuggestedAction: 'Reinforce tourist health support' },
+      { Region: 'Malia', Temperature: 32, Humidity: 61, HeatStressIndex: 'Medium', TouristDensity: 'High', HistoricalIncidents: 16, RiskLevel: 'Medium', ConfidenceScore: 72, SuggestedAction: 'Monitor peak-hour emergency calls' }
+    ];
+
+    const ndx = crossfilter(rawData);
+    const regionDim = ndx.dimension(d => d.Region);
+    const touristDim = ndx.dimension(d => d.TouristDensity);
+    const heatDim = ndx.dimension(d => d.HeatStressIndex);
+    const riskDim = ndx.dimension(d => d.RiskLevel);
+
+    function reduceAvgConfidence(dim) {
+      return dim.group().reduce(
+        (p, v) => { p.count += 1; p.total += v.ConfidenceScore; p.avg = p.total / p.count; return p; },
+        (p, v) => { p.count -= 1; p.total -= v.ConfidenceScore; p.avg = p.count ? p.total / p.count : 0; return p; },
+        () => ({ count: 0, total: 0, avg: 0 })
+      );
+    }
+
+    const confidenceRegionGroup = reduceAvgConfidence(regionDim);
+    const scatterDim = ndx.dimension(d => [d.Temperature, d.ConfidenceScore, d.Region]);
+    const scatterGroup = scatterDim.group();
+
+    new dc.SelectMenu('#region-select').dimension(regionDim).group(regionDim.group()).multiple(false).promptText('All regions');
+    new dc.SelectMenu('#risk-select').dimension(riskDim).group(riskDim.group()).multiple(false).promptText('All risk levels');
+    new dc.SelectMenu('#tourist-select').dimension(touristDim).group(touristDim.group()).multiple(false).promptText('All density levels');
+    new dc.SelectMenu('#heat-select').dimension(heatDim).group(heatDim.group()).multiple(false).promptText('All heat levels');
+
+    function makeConfidenceChart(selector, width) {
+      const chart = new dc.BarChart(selector);
+      chart.width(width).height(265).dimension(regionDim).group(confidenceRegionGroup)
+        .valueAccessor(d => d.value.avg).x(d3.scaleBand()).xUnits(dc.units.ordinal)
+        .brushOn(false).barPadding(0.18).outerPadding(0.1)
+        .margins({ top: 12, right: 20, bottom: 48, left: 48 })
+        .yAxisLabel('Confidence %').renderHorizontalGridLines(true).elasticY(true)
+        .ordering(d => d.key).title(d => `${d.key}: ${d.value.avg.toFixed(1)}%`);
+      chart.yAxis().ticks(5);
+      return chart;
+    }
+
+    function makeScatterChart(selector, width) {
+      return new dc.ScatterPlot(selector).width(width).height(265).dimension(scatterDim).group(scatterGroup)
+        .x(d3.scaleLinear().domain([28, 37])).y(d3.scaleLinear().domain([40, 90]))
+        .xAxisLabel('Temperature (°C)').yAxisLabel('Confidence').symbolSize(11).excludedOpacity(0.28)
+        .margins({ top: 12, right: 20, bottom: 48, left: 52 })
+        .renderHorizontalGridLines(true).renderVerticalGridLines(true)
+        .title(d => `${d.key[2]} | ${d.key[0]}°C | ${d.key[1]}% confidence`);
+    }
+
+    makeConfidenceChart('#confidence-chart', 690);
+    makeScatterChart('#scatter-chart', 520);
+    makeConfidenceChart('#confidence-chart-2', 800);
+    makeScatterChart('#scatter-chart-2', 700);
+
+    function rows() { return regionDim.top(Infinity); }
+    function levelClass(level) { return level.toLowerCase(); }
+
+    function renderAlertCard(row) {
+      return `
+        <div class="alert-card ${levelClass(row.RiskLevel)}">
+          <div class="alert-top"><h4>${row.Region} · ${row.RiskLevel} Risk</h4><span class="confidence-chip">${row.ConfidenceScore}%</span></div>
+          <div class="meta">Temp ${row.Temperature}°C · Humidity ${row.Humidity}% · Tourism ${row.TouristDensity}<br />Heat stress: ${row.HeatStressIndex} · Historical incidents: ${row.HistoricalIncidents}</div>
+          <div class="action">${row.SuggestedAction}</div>
+        </div>`;
+    }
+
+    function updateStats() {
+      const data = rows();
+      const highRisk = data.filter(d => d.RiskLevel === 'High').length;
+      const avgConfidence = data.length ? d3.mean(data, d => d.ConfidenceScore) : 0;
+      const avgTemp = data.length ? d3.mean(data, d => d.Temperature) : 0;
+      const peak = data.length ? [...data].sort((a, b) => b.ConfidenceScore - a.ConfidenceScore)[0] : null;
+      document.getElementById('high-risk-count').textContent = highRisk;
+      document.getElementById('avg-confidence').textContent = `${avgConfidence.toFixed(0)}%`;
+      document.getElementById('avg-temp').textContent = `${avgTemp.toFixed(1)}°C`;
+      document.getElementById('peak-region').textContent = peak ? peak.Region : '—';
+    }
+
+    function updateAlerts() {
+      const data = rows().sort((a, b) => b.ConfidenceScore - a.ConfidenceScore).slice(0, 4);
+      const html = data.length ? data.map(renderAlertCard).join('') : '<div class="alert-card low"><div class="alert-top"><h4>No matching alerts</h4></div><div class="meta">Adjust filters to view regional signals.</div></div>';
+      document.getElementById('alerts-container').innerHTML = html;
+      document.getElementById('alerts-page-container').innerHTML = html;
+    }
+
+    function rowHtml(row, full = false) {
+      return `<tr>
+        <td><strong>${row.Region}</strong></td><td><span class="badge ${levelClass(row.RiskLevel)}">${row.RiskLevel}</span></td>
+        <td>${row.Temperature}°C</td><td>${row.Humidity}%</td>${full ? `<td>${row.HeatStressIndex}</td>` : ''}<td>${row.TouristDensity}</td>${full ? `<td>${row.HistoricalIncidents}</td>` : ''}<td><strong>${row.ConfidenceScore}%</strong></td><td>${row.SuggestedAction}</td>
+      </tr>`;
+    }
+
+    function updateTables() {
+      const data = rows().sort((a, b) => b.ConfidenceScore - a.ConfidenceScore);
+      document.getElementById('data-table').innerHTML = data.map(d => rowHtml(d, false)).join('');
+      document.getElementById('regions-table').innerHTML = data.map(d => rowHtml(d, true)).join('');
+    }
+
+    function updateDashboard() { updateStats(); updateAlerts(); updateTables(); }
+
+    function showPage(page) {
+      document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+      document.getElementById(`page-${page}`).classList.add('active');
+      document.querySelectorAll('.menu-item').forEach(a => a.classList.toggle('active', a.dataset.page === page));
+      window.location.hash = page;
+      setTimeout(() => dc.redrawAll(), 80);
+    }
+
+    document.querySelectorAll('.menu-item').forEach(link => {
+      link.addEventListener('click', event => {
+        event.preventDefault();
+        showPage(link.dataset.page);
+      });
+    });
+
+    window.addEventListener('hashchange', () => {
+      const page = location.hash.replace('#', '') || 'dashboard';
+      if (document.getElementById(`page-${page}`)) showPage(page);
+    });
+
+    dc.chartRegistry.list().forEach(chart => chart.on('filtered', updateDashboard));
+    dc.renderAll();
+    updateDashboard();
+    showPage(location.hash.replace('#', '') || 'dashboard');
+  </script>
+</body>
+</html>
+
