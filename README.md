@@ -88,3 +88,13 @@ Inputs –> Processing –> Confidence Logic –> Dashboard
 RiskSense: An Interactive Analytics Dashboard for Early Regional Health Monitoring
 
 ---
+
+👨‍💻 Author
+
+Marios Vardalachakis
+
+⭐ Notes
+
+This is a prototype system developed for research and demonstration purposes.
+
+---
