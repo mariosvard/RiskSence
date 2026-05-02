@@ -13,7 +13,7 @@ RiskSense creates a Dashboard which combines various weak indicators (such as te
 - Dashboards help in decision-making.
 - Demonstrate a proposed approach for multisignal health risk prediction.
 
- Approach
+🧠 Approach
 The proposed system employs the following weighted aggregation formula:
 
 Confidence = w_T * T_s + w_D * D_s + w_H * H_s
