@@ -6,6 +6,9 @@ RiskSense is an experimental analytics tool which utilizes environmental and con
 
 RiskSense creates a Dashboard which combines various weak indicators (such as temperature, humidity, number of tourists, etc.) into one score using a confidence measure.
 
+---
+
+
 ## 🎯 Objective
 
 - Provide an early warning system to identify health risks in the region.
