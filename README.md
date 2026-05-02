@@ -8,6 +8,14 @@ RiskSense creates a Dashboard which combines various weak indicators (such as te
 
 ---
 
+🌐 Live Demo
+
+🔗 Interactive Dashboard:
+https://mariosvard.github.io/RiskSence/
+
+Experience the RiskSense platform through an interactive dashboard that visualizes environmental and regional indicators, enabling real-time exploration of confidence-based monitoring results.
+
+---
 
 ## 🎯 Objective
 
