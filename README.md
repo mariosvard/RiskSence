@@ -39,3 +39,7 @@ The RiskSense dashboard presents a graphical interface for analyzing regional da
 The dashboard visualizes how multiple weak signals are combined into a unified confidence score.
 
 # 🗂️ Data
+
+### Environment
+- Temperature  
+- Humidity  
