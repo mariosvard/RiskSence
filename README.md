@@ -31,3 +31,9 @@ Where:- T_s: Temperature Score
 The RiskSense dashboard presents a graphical interface for analyzing regional data.
 
 ---
+
+### 🖼️ Dashboard Preview
+
+![RiskSense Dashboard](dashboard.png)
+
+> The dashboard visualizes how multiple weak signals are combined into a unified confidence score.
