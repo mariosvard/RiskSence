@@ -44,11 +44,13 @@ The dashboard visualizes how multiple weak signals are combined into a unified c
 - Temperature  
 - Humidity
 
-  ### Region 
+### Region 
 - Tourist Density 
 - Incidents in the past
 
 ### Output
-- Confidence score 
+- Confidence score
+- Risk level 
+- Suggested actions 
 - Risk level 
 - Suggested actions 
