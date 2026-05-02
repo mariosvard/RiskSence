@@ -34,6 +34,6 @@ The RiskSense dashboard presents a graphical interface for analyzing regional da
 
 ### 🖼️ Dashboard Preview
 
-![RiskSense Dashboard](dashboard.png)
+![RiskSense Dashboard](Dashboard.png)
 
 > The dashboard visualizes how multiple weak signals are combined into a unified confidence score.
