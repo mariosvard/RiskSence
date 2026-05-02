@@ -29,3 +29,5 @@ Where:- T_s: Temperature Score
 - H_s: Historical incidents score.# 📉 Dashboard
 
 The RiskSense dashboard presents a graphical interface for analyzing regional data.
+
+---
