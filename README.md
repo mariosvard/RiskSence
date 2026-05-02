@@ -69,3 +69,22 @@ Inputs –> Processing –> Confidence Logic –> Dashboard
 - dc.js
 - Crossfilter
 ---
+
+## ⚠️ Limitations
+- Data is simulated  
+- Lack of real-time integration  
+- Lack of machine learning  
+
+---
+
+## 🚀 Future Work
+- Integration of real-world data  
+- IoT & APIs  
+- Machine learning algorithms  
+
+---
+
+## 📄 Paper
+RiskSense: An Interactive Analytics Dashboard for Early Regional Health Monitoring
+
+---
