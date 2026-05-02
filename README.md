@@ -60,5 +60,5 @@ Inputs –> Processing –> Confidence Logic –> Dashboard
 - D3.js 
 - dc.js
 - Crossfilter
-- Risk level 
-- Suggested actions 
+
+---
