@@ -51,6 +51,14 @@ The dashboard visualizes how multiple weak signals are combined into a unified c
 ### Output
 - Confidence score
 - Risk level 
-- Suggested actions 
+- Suggested actions
+
+## 🧩 System Structure
+Inputs –> Processing –> Confidence Logic –> Dashboard 
+## 💻 Technologies 
+- JavaScript 
+- D3.js 
+- dc.js
+- Crossfilter
 - Risk level 
 - Suggested actions 
