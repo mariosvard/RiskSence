@@ -77,6 +77,25 @@ Inputs –> Processing –> Confidence Logic –> Dashboard
 
 ---
 
+▶️ How to Run the Project
+
+1. Open the project in Visual Studio Code
+2. Install the Live Server Extension
+-Open Extensions (Ctrl + Shift +X)
+-Search for:
+Live Server
+-Install the extension
+3. Run the Dashboard
+Open the index.html file
+Right click → Open with Live Server
+4. Open in Browser
+The dashboard will automatically launch at:
+http://127.0.0.1:5500
+
+
+
+
+
 ## 🚀 Future Work
 - Integration of real-world data  
 - IoT & APIs  
