@@ -98,7 +98,7 @@ Open the project folder using Visual Studio Code.
 - Open Extensions (`Ctrl + Shift + X`)
 - Search for:
   `Live Server`
-- Install the extension by **Ritwick Dey**
+- Install the extension 
 
 
 
