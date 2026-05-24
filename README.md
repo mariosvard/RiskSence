@@ -85,13 +85,13 @@ Inputs –> Processing –> Confidence Logic –> Dashboard
 git clone https://github.com/yourusername/RiskSense.git
 ```
 
----
+
 
 ## 2. Open the Project in Visual Studio Code
 
 Open the project folder using Visual Studio Code.
 
----
+
 
 ## 3. Install the Live Server Extension
 
@@ -100,14 +100,14 @@ Open the project folder using Visual Studio Code.
   `Live Server`
 - Install the extension by **Ritwick Dey**
 
----
+
 
 ## 4. Run the Dashboard
 
 - Open the `index.html` file
 - Right click → **Open with Live Server**
 
----
+
 
 ## 5. Open in Browser
 
@@ -122,7 +122,6 @@ or
 http://localhost:5500
 ```
 
----
 
 
 ## 🚀 Future Work
